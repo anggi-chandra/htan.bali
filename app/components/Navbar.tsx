@@ -22,7 +22,12 @@ export default function Navbar() {
                     <div className="flex-shrink-0">
                         <Link href="/" className="flex items-center gap-2">
                             <img src="/logo_htan.png" alt="HTan.bali Logo" className="h-8 w-auto" />
-                            <span className="text-2xl font-bold text-white tracking-tighter">HTan<span className="text-blue-500">.bali</span></span>
+                            <span className="text-2xl font-bold tracking-tighter">
+                                <span className="text-[#F69B26]">H</span>
+                                <span className="text-blue-600">T</span>
+                                <span className="text-white">an</span>
+                                <span className="text-blue-500">.bali</span>
+                            </span>
                         </Link>
                     </div>
                     <div className="hidden md:block">
