@@ -18,7 +18,7 @@ export const products: Product[] = [
     category: 'HT',
     price: 25000,
     description: 'Handy Talky Dual Band dengan kualitas suara jernih dan baterai tahan lama. Cocok untuk event organizer, keamanan, dan kegiatan outdoor.',
-    image: 'https://images.unsplash.com/photo-1620401537439-900932152825?q=80&w=1000&auto=format&fit=crop', // Placeholder
+    image: '/gambar_ht_baofeng.png',
     features: ['Dual PTT (Push To Talk)', 'Dual Band VHF/UHF', 'FM Radio', 'Flashlight'],
     specs: {
       'Frequency Range': '136-174MHz / 400-520MHz',
@@ -32,7 +32,7 @@ export const products: Product[] = [
     category: 'HT',
     price: 50000,
     description: 'HT profesional dengan body tangguh standar militer. Suara audio yang kuat dan jernih, sangat handal untuk lapangan.',
-    image: 'https://images.unsplash.com/photo-1588612546437-452932289f84?q=80&w=1000&auto=format&fit=crop', // Placeholder
+    image: '/gambar_ht_icon.png',
     features: ['Military Grade Durability', '750mW Audio Power', 'Water Resistant', 'Long Battery Life'],
     specs: {
       'Frequency Range': '136-174MHz',
@@ -46,7 +46,7 @@ export const products: Product[] = [
     category: 'Intercom',
     price: 350000,
     description: 'Sistem intercom wireless full-duplex tanpa beltpack. Sangat ringan dan nyaman digunakan untuk tim produksi video dan event.',
-    image: 'https://images.unsplash.com/photo-1590845947698-8924d7409b56?q=80&w=1000&auto=format&fit=crop', // Placeholder
+    image: '/gambar_interkom.png',
     features: ['Full-Duplex Communication', '1000ft Range', 'No Beltpack Required', 'Crystal Clear Audio'],
     specs: {
       'Frequency': '1.9GHz',
@@ -60,7 +60,7 @@ export const products: Product[] = [
     category: 'TOA',
     price: 40000,
     description: 'Megaphone dengan suara lantang dan sirine. Ringan dan mudah dibawa, ideal untuk pengumuman, gathering, atau evakuasi.',
-    image: 'https://images.unsplash.com/photo-1520697786279-1a84092b774d?q=80&w=1000&auto=format&fit=crop', // Placeholder
+    image: '/gambar_toa.png',
     features: ['Siren Function', 'Detachable Microphone', 'Antibacterial Treatment', 'Durable ABS Resin'],
     specs: {
       'Output': '15W Rated / 23W Max',

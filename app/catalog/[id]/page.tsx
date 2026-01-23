@@ -3,6 +3,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { products } from '../../data/products';
 import Link from 'next/link';
+import AddToCartSection from '../../components/AddToCartSection';
 
 // Generate static params for all products
 export function generateStaticParams() {
@@ -103,22 +104,7 @@ export default async function ProductDetail({ params }: PageProps) {
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            <a
-                                href={whatsappUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 bg-blue-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-blue-700 transition-colors text-center shadow-lg shadow-blue-600/20"
-                            >
-                                Rent Now via WhatsApp
-                            </a>
-                            <Link
-                                href="/catalog"
-                                className="flex-none px-6 py-4 border border-white/20 rounded-xl text-white hover:bg-white/5 transition-colors"
-                            >
-                                Back
-                            </Link>
-                        </div>
+                        <AddToCartSection product={product} />
                     </div>
                 </div>
             </div>

@@ -49,7 +49,7 @@ export default function Hero() {
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black z-10" />
                 <img
-                    src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000&auto=format&fit=crop"
+                    src="/gambar_background_home_page.png"
                     alt="Concert Crowd"
                     className="w-full h-full object-cover opacity-60"
                 />
