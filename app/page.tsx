@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import ProductCard from './components/ProductCard';
 import { products } from './data/products';
 import Link from 'next/link';
+import AutoScrollImages from './components/AutoScrollImages';
 
 export default function Home() {
   // Get featured products (e.g., first 3)
@@ -45,6 +46,14 @@ export default function Home() {
             View All Equipment
           </Link>
         </div>
+      </section>
+
+      <section className="py-12 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-white text-center">Our Work</h2>
+          <p className="text-gray-400 text-center mt-2">Trusted by leading events and organizations</p>
+        </div>
+        <AutoScrollImages />
       </section>
 
       <section className="py-24 bg-white/5">
