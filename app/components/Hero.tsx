@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import Link from 'next/link';
+import { useLoading } from '../context/LoadingContext';
 
 export default function Hero() {
     const heroRef = useRef<HTMLDivElement>(null);
@@ -10,7 +11,11 @@ export default function Hero() {
     const subtitleRef = useRef<HTMLParagraphElement>(null);
     const ctaRef = useRef<HTMLDivElement>(null);
 
+    const { isLoading } = useLoading();
+
     useEffect(() => {
+        if (isLoading) return;
+
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
@@ -41,7 +46,7 @@ export default function Hero() {
         }, heroRef);
 
         return () => ctx.revert();
-    }, []);
+    }, [isLoading]);
 
     return (
         <div ref={heroRef} className="relative h-screen flex items-center justify-center overflow-hidden">
