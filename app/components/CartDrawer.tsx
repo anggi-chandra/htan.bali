@@ -39,7 +39,7 @@ export default function CartDrawer() {
                 className="fixed top-0 right-0 h-full w-full sm:w-96 bg-gray-900 border-l border-white/10 z-50 transform translate-x-full shadow-2xl flex flex-col"
             >
                 <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-white">Your Cart ({cart.length})</h2>
+                    <h2 className="text-xl font-bold text-white">Keranjang ({cart.length})</h2>
                     <button
                         onClick={() => setIsCartOpen(false)}
                         className="text-gray-400 hover:text-white"
@@ -53,12 +53,12 @@ export default function CartDrawer() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {cart.length === 0 ? (
                         <div className="text-center text-gray-400 mt-10">
-                            <p>Your cart is empty.</p>
+                            <p>Keranjang Anda kosong.</p>
                             <button
                                 onClick={() => setIsCartOpen(false)}
                                 className="mt-4 text-blue-400 hover:text-blue-300"
                             >
-                                Continue Shopping
+                                Lanjut Belanja
                             </button>
                         </div>
                     ) : (
@@ -91,7 +91,7 @@ export default function CartDrawer() {
                                             onClick={() => removeFromCart(item.id)}
                                             className="text-red-400 hover:text-red-300 text-sm"
                                         >
-                                            Remove
+                                            Hapus
                                         </button>
                                     </div>
                                 </div>

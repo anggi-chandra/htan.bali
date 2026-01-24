@@ -11,8 +11,8 @@ export default function Navbar() {
     const { cart, setIsCartOpen } = useCart();
 
     const navLinks = [
-        { name: 'Home', href: '/' },
-        { name: 'Catalog', href: '/catalog' },
+        { name: 'Beranda', href: '/' },
+        { name: 'Katalog', href: '/catalog' },
     ];
 
     return (

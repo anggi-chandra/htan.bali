@@ -27,10 +27,10 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <p className="text-gray-400 text-sm line-clamp-2 mb-3">{product.description}</p>
                     <div className="flex items-center justify-between">
                         <span className="text-white font-bold">
-                            Rp {product.price.toLocaleString('id-ID')} <span className="text-xs text-gray-500 font-normal">/ day</span>
+                            Rp {product.price.toLocaleString('id-ID')} <span className="text-xs text-gray-500 font-normal">/ hari</span>
                         </span>
                         <span className="text-blue-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
-                            View Details &rarr;
+                            Lihat Detail &rarr;
                         </span>
                     </div>
                 </div>

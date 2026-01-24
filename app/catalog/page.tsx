@@ -63,9 +63,9 @@ export default function Catalog() {
 
             <div className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full flex-grow">
                 <div ref={headerRef} className="text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Equipment Catalog</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Katalog Peralatan</h1>
                     <p className="text-gray-400 max-w-2xl mx-auto">
-                        Browse our complete inventory of professional communication equipment.
+                        Jelajahi inventaris lengkap peralatan komunikasi profesional kami.
                     </p>
                 </div>
 
@@ -81,7 +81,7 @@ export default function Catalog() {
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
-                                {category}
+                                {category === 'All' ? 'Semua' : category}
                             </button>
                         ))}
                     </div>
@@ -96,7 +96,7 @@ export default function Catalog() {
 
                 {filteredProducts.length === 0 && (
                     <div className="text-center py-20">
-                        <p className="text-gray-500 text-lg">No products found in this category.</p>
+                        <p className="text-gray-500 text-lg">Tidak ada produk ditemukan dalam kategori ini.</p>
                     </div>
                 )}
             </div>

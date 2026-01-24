@@ -33,7 +33,7 @@ export default function AddToCartSection({ product }: AddToCartSectionProps) {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
-                <span className="text-gray-300 font-medium">Quantity:</span>
+                <span className="text-gray-300 font-medium">Jumlah:</span>
                 <div className="flex items-center border border-white/20 rounded-xl bg-white/5">
                     <button
                         onClick={decreaseQuantity}
@@ -57,17 +57,17 @@ export default function AddToCartSection({ product }: AddToCartSectionProps) {
                 <button
                     onClick={handleAddToCart}
                     className={`flex-1 font-bold py-4 px-8 rounded-xl transition-all shadow-lg transform active:scale-95 ${isAdded
-                            ? 'bg-green-600 text-white shadow-green-600/20'
-                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'
+                        ? 'bg-green-600 text-white shadow-green-600/20'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'
                         }`}
                 >
-                    {isAdded ? 'Added to Cart!' : 'Add to Cart'}
+                    {isAdded ? 'Ditambahkan!' : 'Tambah ke Keranjang'}
                 </button>
                 <Link
                     href="/catalog"
                     className="flex-none px-6 py-4 border border-white/20 rounded-xl text-white hover:bg-white/5 transition-colors flex items-center justify-center"
                 >
-                    Back
+                    Kembali
                 </Link>
             </div>
         </div>

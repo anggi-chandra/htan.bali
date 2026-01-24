@@ -69,18 +69,18 @@ export default function Hero() {
                 </h1>
                 <p
                     ref={subtitleRef}
-                    className="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed"
+                    className="text-xl md:text-2xl text-gray-300 mb-10 max-w-5xl mx-auto leading-relaxed"
                 >
-                    Premium rental equipment for events, production, and security in Bali.
+                    Penyewaan peralatan premium untuk acara, produksi, dan keamanan di Bali.
                     <br className="hidden md:block" />
-                    Crystal clear audio, reliable connection, professional service.
+                    Audio jernih, koneksi andal, layanan profesional.
                 </p>
                 <div ref={ctaRef} className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
                         href="/catalog"
                         className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-all transform hover:scale-105"
                     >
-                        Browse Catalog
+                        Lihat Katalog
                     </Link>
                     <a
                         href="https://wa.me/6281234567890" // Replace with actual number
@@ -88,7 +88,7 @@ export default function Hero() {
                         rel="noopener noreferrer"
                         className="px-8 py-4 bg-transparent border border-white/30 text-white font-bold rounded-full hover:bg-white/10 transition-all"
                     >
-                        Contact Us
+                        Hubungi Kami
                     </a>
                 </div>
             </div>

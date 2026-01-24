@@ -19,16 +19,16 @@ export default function Home() {
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Featured Equipment</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Peralatan Unggulan</h2>
             <p className="text-gray-400 max-w-xl">
-              Top-rated gear chosen by professionals for seamless communication.
+              Perlengkapan terbaik pilihan profesional untuk komunikasi yang lancar.
             </p>
           </div>
           <Link
             href="/catalog"
             className="hidden md:inline-flex items-center text-blue-400 hover:text-blue-300 font-medium transition-colors"
           >
-            View All Equipment &rarr;
+            Lihat Semua Peralatan &rarr;
           </Link>
         </div>
 
@@ -43,48 +43,48 @@ export default function Home() {
             href="/catalog"
             className="inline-block px-6 py-3 border border-white/20 rounded-full text-white hover:bg-white/10 transition-colors"
           >
-            View All Equipment
+            Lihat Semua Peralatan
           </Link>
         </div>
       </section>
 
       <section className="py-12 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white text-center">Our Work</h2>
-          <p className="text-gray-400 text-center mt-2">Trusted by leading events and organizations</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white text-center">Karya Kami</h2>
+          <p className="text-gray-400 text-center mt-2">Dipercaya oleh acara dan organisasi terkemuka</p>
         </div>
         <AutoScrollImages />
       </section>
 
       <section className="py-24 bg-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">Why Choose HTan.bali?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">Mengapa Memilih HTan.bali?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="p-6">
               <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-400 text-2xl">
                 ⚡
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Fast Delivery</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Pengiriman Cepat</h3>
               <p className="text-gray-400">
-                We deliver directly to your event location anywhere in Bali, on time, every time.
+                Kami mengirim langsung ke lokasi acara Anda di mana saja di Bali, tepat waktu, setiap saat.
               </p>
             </div>
             <div className="p-6">
               <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-purple-400 text-2xl">
                 🛡️
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Well Maintained</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Terawat dengan Baik</h3>
               <p className="text-gray-400">
-                All units are sanitized, charged, and tested before delivery to ensure reliability.
+                Semua unit disanitasi, diisi daya, dan diuji sebelum pengiriman untuk memastikan keandalan.
               </p>
             </div>
             <div className="p-6">
               <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-green-400 text-2xl">
                 🎧
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">24/7 Support</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Dukungan 24/7</h3>
               <p className="text-gray-400">
-                Technical issues? Our team is ready to assist you anytime during your rental period.
+                Masalah teknis? Tim kami siap membantu Anda kapan saja selama masa sewa Anda.
               </p>
             </div>
           </div>
