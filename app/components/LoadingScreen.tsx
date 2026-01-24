@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { useLoading } from "../context/LoadingContext";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function LoadingScreen() {
     const [progress, setProgress] = useState(0);
@@ -12,8 +13,22 @@ export default function LoadingScreen() {
     const logoRef = useRef<HTMLImageElement>(null);
 
     const { setIsLoading } = useLoading();
+    const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
+        // Redirect to home if not on home page
+        if (pathname !== '/') {
+            router.push('/');
+        }
+
+        // Prevent browser from restoring scroll position
+        if (typeof window !== 'undefined') {
+            window.history.scrollRestoration = 'manual';
+        }
+
+        window.scrollTo(0, 0);
+
         const tl = gsap.timeline({
             onComplete: () => {
                 setIsLoading(false);
@@ -22,6 +37,12 @@ export default function LoadingScreen() {
                     opacity: 0,
                     duration: 0.5,
                     display: "none",
+                    onComplete: () => {
+                        // Re-enable scroll restoration after loading
+                        if (typeof window !== 'undefined') {
+                            window.history.scrollRestoration = 'auto';
+                        }
+                    }
                 });
             },
         });
