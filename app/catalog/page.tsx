@@ -15,7 +15,7 @@ export default function Catalog() {
     const gridRef = useRef<HTMLDivElement>(null);
     const { isLoading } = useLoading();
 
-    const categories: (Category | 'All')[] = ['All', 'HT', 'Intercom', 'TOA'];
+    const categories: (Category | 'All')[] = ['All', 'HT', 'Intercom'];
 
     const filteredProducts =
         activeCategory === 'All'

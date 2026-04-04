@@ -31,6 +31,7 @@ export default function CheckoutPage() {
             customer: formData,
             orderId: `ORD-${Date.now()}`,
             date: new Date().toISOString(),
+            status: 'pending',
         };
         localStorage.setItem('htan_last_order', JSON.stringify(orderDetails));
         router.push('/order-confirmation');

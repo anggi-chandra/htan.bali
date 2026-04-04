@@ -35,3 +35,15 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

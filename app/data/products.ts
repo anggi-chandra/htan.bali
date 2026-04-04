@@ -1,4 +1,4 @@
-export type Category = 'HT' | 'Intercom' | 'TOA';
+export type Category = 'HT' | 'Intercom';
 
 export interface Product {
   id: string;
@@ -52,20 +52,6 @@ export const products: Product[] = [
       'Frequency': '1.9GHz',
       'Latency': '<35ms',
       'Battery Life': 'Up to 10 hours',
-    },
-  },
-  {
-    id: 'toa-megaphone-zr2015',
-    name: 'TOA Megaphone ZR-2015',
-    category: 'TOA',
-    price: 40000,
-    description: 'Megaphone dengan suara lantang dan sirine. Ringan dan mudah dibawa, ideal untuk pengumuman, gathering, atau evakuasi.',
-    image: '/gambar_toa.png',
-    features: ['Siren Function', 'Detachable Microphone', 'Antibacterial Treatment', 'Durable ABS Resin'],
-    specs: {
-      'Output': '15W Rated / 23W Max',
-      'Range': 'Voice: 400m / Siren: 500m',
-      'Battery': '6 x C size',
     },
   },
 ];
