@@ -22,12 +22,11 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
                     <div className="flex-shrink-0">
                         <Link href="/" className="flex items-center gap-2">
-                            <img src="/logo_htan.png" alt="HTan.bali Logo" className="h-8 w-auto" />
-                            <span className="text-2xl font-bold tracking-tighter">
-                                <span className="text-[#F69B26]">H</span>
-                                <span className="text-blue-600">T</span>
-                                <span className="text-white">an</span>
-                                <span className="text-blue-500">.bali</span>
+                            <div className="bg-white p-1 rounded-md">
+                                <img src="/logo_htan_baru.png" alt="HTan.bali Logo" className="h-8 w-auto mix-blend-multiply" />
+                            </div>
+                            <span className="text-2xl font-bold tracking-tighter text-white">
+                                HTan.bali
                             </span>
                         </Link>
                     </div>

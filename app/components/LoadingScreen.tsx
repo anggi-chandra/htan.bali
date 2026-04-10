@@ -75,10 +75,10 @@ export default function LoadingScreen() {
             ref={containerRef}
             className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black text-white"
         >
-            <div className="relative w-32 h-32 mb-8">
+            <div className="relative w-48 h-48 mb-8">
                 <Image
                     ref={logoRef}
-                    src="/logo_htan.png"
+                    src="/logo_htan_baru.png"
                     alt="HTan Bali Logo"
                     fill
                     className="object-contain opacity-0"

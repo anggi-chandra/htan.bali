@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: "HTan.Bali",
   description: "Premium rental equipment for events in Bali",
   icons: {
-    icon: '/logo_htan.png',
+    icon: '/logo_htan_baru.png',
   },
 };
 
