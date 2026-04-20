@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '../../components/AdminSidebar';
-import { products as initialProducts, Product, Category } from '../../data/products';
+import { Product, Category } from '../../data/products';
+import { supabase } from '../../../utils/supabase';
 
 export default function AdminProducts() {
     const router = useRouter();
@@ -12,39 +13,39 @@ export default function AdminProducts() {
 
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [formData, setFormData] = useState<Partial<Product>>({});
+    const [imageFile, setImageFile] = useState<File | null>(null);
 
     useEffect(() => {
         const isAdmin = localStorage.getItem('isAdmin');
         if (!isAdmin) {
             router.push('/admin/login');
         } else {
-            const storedProducts = localStorage.getItem('adminProducts');
-            if (storedProducts) {
-                setProducts(JSON.parse(storedProducts));
-            } else {
-                setProducts(initialProducts);
-                localStorage.setItem('adminProducts', JSON.stringify(initialProducts));
-            }
-            setTimeout(() => setIsLoading(false), 0);
+            fetchProducts();
         }
     }, [router]);
 
-    const saveProducts = (updatedProducts: Product[]) => {
-        setProducts(updatedProducts);
-        localStorage.setItem('adminProducts', JSON.stringify(updatedProducts));
+    const fetchProducts = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+            setProducts(data);
+        }
+        setIsLoading(false);
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this product?')) {
-            const updated = products.filter(p => p.id !== id);
-            saveProducts(updated);
+            await supabase.from('products').delete().eq('id', id);
+            fetchProducts();
         }
     };
 
     const openAddModal = () => {
         setEditingProduct(null);
+        setImageFile(null);
         setFormData({
             id: 'prod-' + Date.now().toString(),
             name: '',
@@ -52,7 +53,7 @@ export default function AdminProducts() {
             price: 0,
             stock: 0,
             description: '',
-            image: '/gambar_ht_baofeng.png',
+            image: '',
             features: [],
             specs: {}
         });
@@ -61,29 +62,53 @@ export default function AdminProducts() {
 
     const openEditModal = (product: Product) => {
         setEditingProduct(product);
+        setImageFile(null);
         setFormData({ ...product });
         setIsModalOpen(true);
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSaving(true);
         
         let finalFeatures = formData.features || [];
         if (typeof formData.features === 'string') {
            finalFeatures = (formData.features as string).split('\n').filter(Boolean);
         }
+        
+        let imageUrl = formData.image || '';
 
-        const productToSave: Product = {
-            ...(formData as Product),
+        if (imageFile) {
+            const fileExt = imageFile.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const { data, error } = await supabase.storage.from('product-images').upload(fileName, imageFile);
+            
+            if (data) {
+                const { data: publicData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                imageUrl = publicData.publicUrl;
+            }
+        }
+
+        const productToSave = {
+            id: formData.id,
+            name: formData.name,
+            category: formData.category,
+            price: formData.price,
+            stock: formData.stock,
+            description: formData.description,
+            image: imageUrl,
             features: finalFeatures,
+            specs: formData.specs || {}
         };
 
         if (editingProduct) {
-            const updated = products.map(p => p.id === editingProduct.id ? productToSave : p);
-            saveProducts(updated);
+            await supabase.from('products').update(productToSave).eq('id', editingProduct.id);
         } else {
-            saveProducts([...products, productToSave]);
+            await supabase.from('products').insert([productToSave]);
         }
+        
+        await fetchProducts();
+        setIsSaving(false);
         setIsModalOpen(false);
     };
 
@@ -106,7 +131,7 @@ export default function AdminProducts() {
                 <header className="flex justify-between items-center mb-10">
                     <div>
                         <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Products Inventory</h2>
-                        <p className="text-gray-400 mt-1">Manage your rental catalog</p>
+                        <p className="text-gray-400 mt-1">Manage your rental catalog connected to Supabase</p>
                     </div>
                     <button 
                         onClick={openAddModal}
@@ -121,11 +146,18 @@ export default function AdminProducts() {
                     {products.map((product) => (
                         <div key={product.id} className="bg-white/5 border border-white/10 rounded-3xl p-4 backdrop-blur-sm group hover:border-blue-500/50 transition-all flex flex-col h-full">
                             <div className="aspect-square w-full rounded-2xl overflow-hidden bg-white/10 relative mb-4">
-                                <img 
-                                    src={product.image} 
-                                    alt={product.name} 
-                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                                />
+                                {product.image ? (
+                                    <img 
+                                        src={product.image} 
+                                        alt={product.name} 
+                                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                                        <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span className="text-sm">No Image</span>
+                                    </div>
+                                )}
                                 <div className="absolute top-3 right-3 flex gap-2">
                                     <button 
                                         onClick={() => openEditModal(product)}
@@ -167,6 +199,12 @@ export default function AdminProducts() {
                             </div>
                         </div>
                     ))}
+                    
+                    {products.length === 0 && !isLoading && (
+                        <div className="col-span-full py-20 text-center text-gray-500">
+                            No products found in Supabase. Adding a product will save it to your database.
+                        </div>
+                    )}
                 </div>
 
                 {isModalOpen && (
@@ -232,12 +270,13 @@ export default function AdminProducts() {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-400 mb-1">Product Image</label>
                                             <input 
-                                                required={!formData.image}
+                                                required={!formData.image && !editingProduct}
                                                 type="file"
                                                 accept="image/*"
                                                 onChange={e => {
                                                     const file = e.target.files?.[0];
                                                     if (file) {
+                                                        setImageFile(file);
                                                         const reader = new FileReader();
                                                         reader.onloadend = () => {
                                                             setFormData({...formData, image: reader.result as string});
@@ -249,7 +288,7 @@ export default function AdminProducts() {
                                             />
                                             {formData.image && (
                                                 <div className="mt-2 text-xs text-green-400 truncate px-1">
-                                                    Image loaded successfully
+                                                    Image attached
                                                 </div>
                                             )}
                                         </div>
@@ -280,14 +319,17 @@ export default function AdminProducts() {
                                     <button 
                                         type="button"
                                         onClick={() => setIsModalOpen(false)}
-                                        className="px-6 py-2 rounded-xl text-gray-400 hover:text-white transition-colors"
+                                        disabled={isSaving}
+                                        className="px-6 py-2 rounded-xl text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                                     >
                                         Cancel
                                     </button>
                                     <button 
                                         type="submit"
-                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-600/20"
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50"
                                     >
+                                        {isSaving && <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
                                         {editingProduct ? 'Save Changes' : 'Add Product'}
                                     </button>
                                 </div>

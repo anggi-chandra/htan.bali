@@ -2,13 +2,13 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Footer from './components/Footer';
 import ProductCard from './components/ProductCard';
-import { products } from './data/products';
+import { supabase } from '../utils/supabase';
 import Link from 'next/link';
 import AutoScrollImages from './components/AutoScrollImages';
 
-export default function Home() {
-  // Get featured products (e.g., first 3)
-  const featuredProducts = products.slice(0, 3);
+export default async function Home() {
+  const { data: products } = await supabase.from('products').select('*').limit(3);
+  const featuredProducts = products || [];
 
   return (
     <main className="min-h-screen flex flex-col">

@@ -6,16 +6,28 @@ import { useLoading } from '../context/LoadingContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
-import { products, Category } from '../data/products';
+import { Category, Product } from '../data/products';
+import { supabase } from '../../utils/supabase';
 
 export default function Catalog() {
     const [activeCategory, setActiveCategory] = useState<Category | 'All'>('All');
+    const [products, setProducts] = useState<Product[]>([]);
     const headerRef = useRef<HTMLDivElement>(null);
     const filterRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<HTMLDivElement>(null);
     const { isLoading } = useLoading();
 
-    const categories: (Category | 'All')[] = ['All', 'HT', 'Intercom'];
+    const categories: (Category | 'All')[] = ['All', 'HT', 'Jasa Broadcasting', 'Paket'];
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            const { data } = await supabase.from('products').select('*');
+            if (data) {
+                setProducts(data as Product[]);
+            }
+        };
+        fetchProducts();
+    }, []);
 
     const filteredProducts =
         activeCategory === 'All'
@@ -55,7 +67,7 @@ export default function Catalog() {
         });
 
         return () => ctx.revert();
-    }, [isLoading, activeCategory]); // Re-run animation when category changes
+    }, [isLoading, activeCategory, products]); // Re-run animation when category or products change
 
     return (
         <main className="min-h-screen flex flex-col">
@@ -71,7 +83,7 @@ export default function Catalog() {
 
                 {/* Filter */}
                 <div ref={filterRef} className="flex justify-center mb-12">
-                    <div className="inline-flex bg-white/5 p-1 rounded-full border border-white/10">
+                    <div className="inline-flex bg-white/5 p-1 rounded-full border border-white/10 flex-wrap justify-center gap-1">
                         {categories.map((category) => (
                             <button
                                 key={category}

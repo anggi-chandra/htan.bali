@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { products } from '../data/products';
+import { supabase } from '../../utils/supabase';
 
 import AdminSidebar from '../components/AdminSidebar';
 
@@ -19,6 +19,8 @@ export default function AdminDashboard() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [recentOrder, setRecentOrder] = useState<OrderDetail | null>(null);
+    const [products, setProducts] = useState<any[]>([]);
+    const [stats, setStats] = useState({ totalRevenue: 0, totalOrders: 0, activeCustomers: 0 });
 
     useEffect(() => {
         // Auth Guard
@@ -26,13 +28,40 @@ export default function AdminDashboard() {
         if (!isAdmin) {
             router.push('/admin/login');
         } else {
-            setTimeout(() => setIsLoading(false), 0);
-            
-            // Load recent order from local storage
-            const storedOrder = localStorage.getItem('htan_last_order');
-            if (storedOrder) {
-                setRecentOrder(JSON.parse(storedOrder));
-            }
+            const fetchDashboardData = async () => {
+                // Fetch Recent Orders for Stats Calculation
+                const { data: recOrders } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+                
+                if (recOrders && recOrders.length > 0) {
+                    let totalRev = 0;
+                    let uniqueCustomers = new Set();
+                    
+                    recOrders.forEach(o => {
+                        totalRev += Number(o.total_price);
+                        uniqueCustomers.add(o.customer_whatsapp);
+                    });
+                    
+                    setStats({
+                        totalRevenue: totalRev,
+                        totalOrders: recOrders.length,
+                        activeCustomers: uniqueCustomers.size
+                    });
+
+                    setRecentOrder({
+                        orderId: recOrders[0].id,
+                        total: Number(recOrders[0].total_price),
+                        date: recOrders[0].created_at,
+                        customer: { name: recOrders[0].customer_name }
+                    });
+                }
+                
+                // Fetch Top Products
+                const { data: prods } = await supabase.from('products').select('*').limit(4);
+                if (prods) setProducts(prods);
+
+                setIsLoading(false);
+            };
+            fetchDashboardData();
         }
     }, [router]);
 
@@ -43,11 +72,6 @@ export default function AdminDashboard() {
             </div>
         );
     }
-
-    // Calculate dynamic stats if order exists, otherwise use placeholders
-    const totalRevenue = recentOrder ? recentOrder.total + 15000000 : 15000000;
-    const totalOrders = recentOrder ? 125 + 1 : 125;
-    const activeCustomers = recentOrder ? 84 + 1 : 84;
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex text-white relative overflow-hidden">
@@ -72,7 +96,7 @@ export default function AdminDashboard() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-gray-400 text-sm font-medium mb-1">Total Revenue</p>
-                                <h3 className="text-2xl font-bold">Rp {totalRevenue.toLocaleString('id-ID')}</h3>
+                                <h3 className="text-2xl font-bold">Rp {stats.totalRevenue.toLocaleString('id-ID')}</h3>
                             </div>
                             <div className="p-3 bg-green-500/20 text-green-400 rounded-xl">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -80,7 +104,7 @@ export default function AdminDashboard() {
                         </div>
                         <p className="text-green-400 text-sm mt-4 flex items-center gap-1 font-medium">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                            +12.5% from last month
+                            Updated Sync
                         </p>
                     </div>
 
@@ -88,7 +112,7 @@ export default function AdminDashboard() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-gray-400 text-sm font-medium mb-1">Total Orders</p>
-                                <h3 className="text-2xl font-bold">{totalOrders}</h3>
+                                <h3 className="text-2xl font-bold">{stats.totalOrders}</h3>
                             </div>
                             <div className="p-3 bg-blue-500/20 text-blue-400 rounded-xl">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
@@ -96,7 +120,7 @@ export default function AdminDashboard() {
                         </div>
                         <p className="text-blue-400 text-sm mt-4 flex items-center gap-1 font-medium">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                            +5.2% from last month
+                            Updated Sync
                         </p>
                     </div>
 
@@ -104,7 +128,7 @@ export default function AdminDashboard() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-gray-400 text-sm font-medium mb-1">Active Customers</p>
-                                <h3 className="text-2xl font-bold">{activeCustomers}</h3>
+                                <h3 className="text-2xl font-bold">{stats.activeCustomers}</h3>
                             </div>
                             <div className="p-3 bg-purple-500/20 text-purple-400 rounded-xl">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -112,7 +136,7 @@ export default function AdminDashboard() {
                         </div>
                         <p className="text-purple-400 text-sm mt-4 flex items-center gap-1 font-medium">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                            +2.1% from last month
+                            Updated Sync
                         </p>
                     </div>
                 </div>
@@ -147,34 +171,18 @@ export default function AdminDashboard() {
                                             <td className="py-4 text-right font-medium">Rp {recentOrder.total.toLocaleString('id-ID')}</td>
                                             <td className="py-4 text-center">
                                                 <span className="px-3 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-xs font-medium">
-                                                    Pending
+                                                    Processed
                                                 </span>
                                             </td>
                                         </tr>
                                     )}
-                                    {/* Dummy Data */}
-                                    <tr className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors">
-                                        <td className="py-4 font-medium">ORD-1703421250000</td>
-                                        <td className="py-4 text-gray-300">Budi Santoso</td>
-                                        <td className="py-4 text-gray-400 text-sm">15/03/2026</td>
-                                        <td className="py-4 text-right font-medium">Rp 4.500.000</td>
-                                        <td className="py-4 text-center">
-                                            <span className="px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-xs font-medium">
-                                                Completed
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors">
-                                        <td className="py-4 font-medium">ORD-1703334850000</td>
-                                        <td className="py-4 text-gray-300">Siti Aminah</td>
-                                        <td className="py-4 text-gray-400 text-sm">14/03/2026</td>
-                                        <td className="py-4 text-right font-medium">Rp 2.100.000</td>
-                                        <td className="py-4 text-center">
-                                            <span className="px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-xs font-medium">
-                                                Completed
-                                            </span>
-                                        </td>
-                                    </tr>
+                                    {!recentOrder && (
+                                        <tr>
+                                            <td colSpan={5} className="py-8 text-center text-gray-500">
+                                                No recent orders found.
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>

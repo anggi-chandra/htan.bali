@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '../../components/AdminSidebar';
-import { Product } from '../../data/products';
+import { supabase } from '../../../utils/supabase';
 
 export interface OrderDetail {
     orderId: string;
@@ -25,28 +25,6 @@ export interface OrderDetail {
     status: 'Pending' | 'Active' | 'Completed';
 }
 
-const DUMMY_ORDER: OrderDetail = {
-    orderId: 'ORD-' + Date.now(),
-    total: 350000,
-    date: new Date().toISOString(),
-    customer: {
-        name: 'Budi Santoso',
-        whatsapp: '081234567890',
-        address: 'Jl. Denpasar Raya No. 12',
-        startDate: '2026-03-25',
-        endDate: '2026-03-28'
-    },
-    items: [
-        {
-            id: 'ht-baofeng-uv82',
-            name: 'Baofeng UV-82',
-            price: 25000,
-            quantity: 5
-        }
-    ],
-    status: 'Pending'
-};
-
 export default function AdminOrders() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
@@ -61,70 +39,84 @@ export default function AdminOrders() {
             router.push('/admin/login');
         } else {
             loadOrders();
-            setTimeout(() => setIsLoading(false), 0);
         }
     }, [router]);
 
-    const loadOrders = () => {
-        const storedOrdersStr = localStorage.getItem('htan_orders');
-        if (storedOrdersStr) {
-            setOrders(JSON.parse(storedOrdersStr));
-        } else {
-            // Seed with dummy order if none exists for testing purposes
-            const seeded = [DUMMY_ORDER];
-            setOrders(seeded);
-            localStorage.setItem('htan_orders', JSON.stringify(seeded));
+    const loadOrders = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase
+            .from('orders')
+            .select(`
+                *,
+                items:order_items (
+                    id:product_id,
+                    quantity,
+                    price:price_at_booking,
+                    products ( name )
+                )
+            `)
+            .order('created_at', { ascending: false });
+
+        if (!error && data) {
+            const mappedOrders: OrderDetail[] = data.map(o => ({
+                orderId: o.id,
+                total: Number(o.total_price),
+                date: o.created_at,
+                customer: {
+                    name: o.customer_name,
+                    whatsapp: o.customer_whatsapp,
+                    address: o.customer_address,
+                    startDate: o.start_date,
+                    endDate: o.end_date
+                },
+                items: (o.items as any[]).map((item) => ({
+                    id: item.id,
+                    name: item.products?.name || 'Unknown Product',
+                    price: Number(item.price),
+                    quantity: Number(item.quantity)
+                })),
+                status: o.status as 'Pending' | 'Active' | 'Completed'
+            }));
+            setOrders(mappedOrders);
+        }
+        setIsLoading(false);
+    };
+
+    const updateProductsStock = async (items: OrderDetail['items'], mode: 'deduct' | 'restore') => {
+        for (const item of items) {
+           const { data: product } = await supabase.from('products').select('stock').eq('id', item.id).single();
+           if (product) {
+               let newStock = Number(product.stock);
+               if (mode === 'deduct') newStock = Math.max(0, newStock - item.quantity);
+               if (mode === 'restore') newStock += item.quantity;
+               
+               await supabase.from('products').update({ stock: newStock }).eq('id', item.id);
+           }
         }
     };
 
-    const updateProductsStock = (items: OrderDetail['items'], mode: 'deduct' | 'restore') => {
-        const storedProducts = localStorage.getItem('adminProducts');
-        if(!storedProducts) return;
-        
-        let products: Product[] = JSON.parse(storedProducts);
-        
-        items.forEach(orderItem => {
-            const productIndex = products.findIndex(p => p.id === orderItem.id);
-            if(productIndex !== -1) {
-                if (mode === 'deduct') {
-                    products[productIndex].stock = Math.max(0, products[productIndex].stock - orderItem.quantity);
-                } else if (mode === 'restore') {
-                    products[productIndex].stock += orderItem.quantity;
-                }
-            }
-        });
-
-        localStorage.setItem('adminProducts', JSON.stringify(products));
-    };
-
-    const handleValidateOrder = (orderId: string) => {
+    const handleValidateOrder = async (orderId: string) => {
         if (!confirm('Validating this order will deduct the stock from inventory. Continue?')) return;
         
-        const updatedOrders = orders.map(o => {
-            if (o.orderId === orderId && o.status === 'Pending') {
-                updateProductsStock(o.items, 'deduct');
-                return { ...o, status: 'Active' as const };
-            }
-            return o;
-        });
-
-        setOrders(updatedOrders);
-        localStorage.setItem('htan_orders', JSON.stringify(updatedOrders));
+        const order = orders.find(o => o.orderId === orderId);
+        if (order && order.status === 'Pending') {
+            setIsLoading(true);
+            await updateProductsStock(order.items, 'deduct');
+            await supabase.from('orders').update({ status: 'Active' }).eq('id', orderId);
+            await loadOrders();
+        }
     };
 
-    const handleCompleteOrder = (orderId: string) => {
+    const handleCompleteOrder = async (orderId: string) => {
         if (!confirm('Marking this as returned will restore the items to inventory. Continue?')) return;
 
-        const updatedOrders = orders.map(o => {
-            if (o.orderId === orderId && o.status === 'Active') {
-                updateProductsStock(o.items, 'restore');
-                return { ...o, status: 'Completed' as const };
-            }
-            return o;
-        });
-
-        setOrders(updatedOrders);
-        localStorage.setItem('htan_orders', JSON.stringify(updatedOrders));
+        const order = orders.find(o => o.orderId === orderId);
+        if (order && order.status === 'Active') {
+            setIsLoading(true);
+            await updateProductsStock(order.items, 'restore');
+            await supabase.from('orders').update({ status: 'Completed' }).eq('id', orderId);
+            await loadOrders();
+        }
     };
 
     const printInvoice = () => {
@@ -251,7 +243,7 @@ export default function AdminOrders() {
                                 {orders.length === 0 && (
                                     <tr>
                                         <td colSpan={7} className="py-12 text-center text-gray-400">
-                                            No orders found. Customers need to place orders first!
+                                            No orders found in Supabase Database. Customers need to place orders first!
                                         </td>
                                     </tr>
                                 )}

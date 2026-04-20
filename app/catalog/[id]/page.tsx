@@ -1,16 +1,21 @@
 import { notFound } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { products } from '../../data/products';
 import Link from 'next/link';
 import AddToCartSection from '../../components/AddToCartSection';
+import { supabase } from '../../../utils/supabase';
+import { Product } from '../../data/products';
 
-// Generate static params for all products
-export function generateStaticParams() {
-    return products.map((product) => ({
+// Generate static params for all products statically fetched from Supabase
+export async function generateStaticParams() {
+    const { data: products } = await supabase.from('products').select('id');
+    return (products || []).map((product) => ({
         id: product.id,
     }));
 }
+
+// Revalidate slightly often to capture DB changes since it serves static cache
+export const revalidate = 60; 
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -18,14 +23,15 @@ interface PageProps {
 
 export default async function ProductDetail({ params }: PageProps) {
     const { id } = await params;
-    const product = products.find((p) => p.id === id);
+    
+    // Fetch product details strictly from Supabase
+    const { data: productRaw } = await supabase.from('products').select('*').eq('id', id).single();
 
-    if (!product) {
+    if (!productRaw) {
         notFound();
     }
 
-    const whatsappMessage = `Hello, I would like to rent the ${product.name}. Is it available?`;
-    const whatsappUrl = `https://wa.me/6281234567890?text=${encodeURIComponent(whatsappMessage)}`;
+    const product = productRaw as Product;
 
     return (
         <main className="min-h-screen flex flex-col">
@@ -71,7 +77,7 @@ export default async function ProductDetail({ params }: PageProps) {
                         <div className="mb-10">
                             <h3 className="text-lg font-semibold text-white mb-4">Key Features</h3>
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {product.features.map((feature, index) => (
+                                {product.features?.map((feature, index) => (
                                     <li key={index} className="flex items-center text-gray-300">
                                         <svg
                                             className="w-5 h-5 text-green-500 mr-3 flex-shrink-0"
@@ -95,10 +101,10 @@ export default async function ProductDetail({ params }: PageProps) {
                         <div className="mb-10">
                             <h3 className="text-lg font-semibold text-white mb-4">Specifications</h3>
                             <div className="grid grid-cols-1 gap-4">
-                                {Object.entries(product.specs).map(([key, value]) => (
+                                {product.specs && Object.entries(product.specs).map(([key, value]) => (
                                     <div key={key} className="flex justify-between border-b border-white/10 pb-2">
                                         <span className="text-gray-400">{key}</span>
-                                        <span className="text-white font-medium">{value}</span>
+                                        <span className="text-white font-medium">{String(value)}</span>
                                     </div>
                                 ))}
                             </div>
