@@ -5,11 +5,12 @@ import gsap from 'gsap';
 
 const images = [
     { src: '/event_1.jpg', alt: 'Event Documentation 1' },
-    { src: '/event_2.jpeg', alt: 'Event Documentation 2' },
+    { src: '/event_2.jpg', alt: 'Event Documentation 2' },
     { src: '/event_3.jpg', alt: 'Event Documentation 3' },
     { src: '/event_4.jpg', alt: 'Event Documentation 4' },
     { src: '/event_5.jpeg', alt: 'Event Documentation 5' },
     { src: '/event_6.jpg', alt: 'Event Documentation 6' },
+    { src: '/event_7.jpg', alt: 'Event Documentation 7' },
 ];
 
 export default function AutoScrollImages() {
