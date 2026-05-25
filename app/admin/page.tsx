@@ -13,6 +13,7 @@ interface OrderDetail {
     customer: {
         name: string;
     };
+    status: 'Pending' | 'Active' | 'Completed';
 }
 
 export default function AdminDashboard() {
@@ -51,7 +52,8 @@ export default function AdminDashboard() {
                         orderId: recOrders[0].id,
                         total: Number(recOrders[0].total_price),
                         date: recOrders[0].created_at,
-                        customer: { name: recOrders[0].customer_name }
+                        customer: { name: recOrders[0].customer_name },
+                        status: recOrders[0].status as 'Pending' | 'Active' | 'Completed'
                     });
                 }
                 
@@ -170,9 +172,21 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="py-4 text-right font-medium">Rp {recentOrder.total.toLocaleString('id-ID')}</td>
                                             <td className="py-4 text-center">
-                                                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-xs font-medium">
-                                                    Processed
-                                                </span>
+                                                {recentOrder.status === 'Pending' && (
+                                                    <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-medium border border-yellow-500/20">
+                                                        Pending
+                                                    </span>
+                                                )}
+                                                {recentOrder.status === 'Active' && (
+                                                    <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium border border-blue-500/20">
+                                                        Active/Rented
+                                                    </span>
+                                                )}
+                                                {recentOrder.status === 'Completed' && (
+                                                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium border border-green-500/20">
+                                                        Returned
+                                                    </span>
+                                                )}
                                             </td>
                                         </tr>
                                     )}

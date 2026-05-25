@@ -18,6 +18,10 @@ interface OrderDetails {
     };
     orderId: string;
     date: string;
+    subtotal?: number;
+    discountCode?: string | null;
+    discountAmount?: number;
+    discountPercent?: number;
 }
 
 export default function OrderConfirmationPage() {
@@ -41,7 +45,11 @@ export default function OrderConfirmationPage() {
             .map((item) => `- ${item.name} (x${item.quantity})`)
             .join('\n');
 
-        const message = `*New Rental Order*\nOrder ID: ${order.orderId}\n\n*Customer Details:*\nName: ${order.customer.name}\nWhatsApp: ${order.customer.whatsapp}\nDates: ${order.customer.startDate} to ${order.customer.endDate}\nAddress: ${order.customer.address}\n\n*Items:*\n${itemsList}\n\n*Total Estimate: Rp ${order.total.toLocaleString('id-ID')}*\n\nPlease confirm availability.`;
+        const promoText = order.discountCode
+            ? `\n*Promo Code:* ${order.discountCode} (-Rp ${order.discountAmount?.toLocaleString('id-ID')})`
+            : '';
+
+        const message = `*New Rental Order*\nOrder ID: ${order.orderId}\n\n*Customer Details:*\nName: ${order.customer.name}\nWhatsApp: ${order.customer.whatsapp}\nDates: ${order.customer.startDate} to ${order.customer.endDate}\nAddress: ${order.customer.address}\n\n*Items:*\n${itemsList}\n${promoText}\n\n*Total Estimate: Rp ${order.total.toLocaleString('id-ID')}*\n\nPlease confirm availability.`;
 
         const whatsappUrl = `https://wa.me/6282145580460?text=${encodeURIComponent(message)}`;
 
@@ -107,9 +115,27 @@ export default function OrderConfirmationPage() {
                                 ))}
                             </tbody>
                             <tfoot>
+                                {order.discountCode && (
+                                    <>
+                                        <tr className="border-t border-gray-200">
+                                            <td colSpan={2} className="py-2 text-gray-500 font-medium">Subtotal</td>
+                                            <td className="py-2 text-right font-medium text-gray-900">
+                                                Rp {(order.subtotal || (order.total + (order.discountAmount || 0))).toLocaleString('id-ID')}
+                                            </td>
+                                        </tr>
+                                        <tr className="border-b border-gray-100">
+                                            <td colSpan={2} className="py-2 text-green-600 font-medium">
+                                                Promo: {order.discountCode} {order.discountPercent && order.discountPercent > 0 ? `(${order.discountPercent}%)` : ''}
+                                            </td>
+                                            <td className="py-2 text-right font-medium text-green-600">
+                                                - Rp {order.discountAmount?.toLocaleString('id-ID')}
+                                            </td>
+                                        </tr>
+                                    </>
+                                )}
                                 <tr>
-                                    <td colSpan={2} className="py-4 font-bold text-lg">Total Estimate</td>
-                                    <td className="py-4 font-bold text-lg text-right">Rp {order.total.toLocaleString('id-ID')}</td>
+                                    <td colSpan={2} className="py-4 font-bold text-lg text-gray-900">Total Estimate</td>
+                                    <td className="py-4 font-bold text-lg text-right text-gray-900">Rp {order.total.toLocaleString('id-ID')}</td>
                                 </tr>
                             </tfoot>
                         </table>

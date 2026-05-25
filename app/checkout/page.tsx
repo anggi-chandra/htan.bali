@@ -19,6 +19,52 @@ export default function CheckoutPage() {
         address: '',
     });
 
+    // Promo code state
+    const [promoCode, setPromoCode] = useState('');
+    const [appliedCode, setAppliedCode] = useState('');
+    const [discountPercent, setDiscountPercent] = useState(0);
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [promoError, setPromoError] = useState('');
+    const [isPromoApplied, setIsPromoApplied] = useState(false);
+
+    const handleApplyPromo = () => {
+        setPromoError('');
+        const code = promoCode.trim().toUpperCase();
+
+        if (code === 'HTAN10') {
+            const amount = Math.round(cartTotal * 0.1);
+            setDiscountPercent(10);
+            setDiscountAmount(amount);
+            setAppliedCode(code);
+            setIsPromoApplied(true);
+        } else if (code === 'DISKON20') {
+            const amount = Math.round(cartTotal * 0.2);
+            setDiscountPercent(20);
+            setDiscountAmount(amount);
+            setAppliedCode(code);
+            setIsPromoApplied(true);
+        } else if (code === 'EVENTSERU') {
+            const amount = Math.min(cartTotal, 50000);
+            setDiscountPercent(0);
+            setDiscountAmount(amount);
+            setAppliedCode(code);
+            setIsPromoApplied(true);
+        } else {
+            setPromoError('Kode promo tidak valid.');
+        }
+    };
+
+    const handleRemovePromo = () => {
+        setPromoCode('');
+        setAppliedCode('');
+        setDiscountPercent(0);
+        setDiscountAmount(0);
+        setIsPromoApplied(false);
+        setPromoError('');
+    };
+
+    const finalTotal = cartTotal - discountAmount;
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -42,7 +88,7 @@ export default function CheckoutPage() {
                      customer_address: formData.address,
                      start_date: formData.startDate,
                      end_date: formData.endDate,
-                     total_price: cartTotal,
+                     total_price: finalTotal,
                      status: 'Pending'
                 }])
                 .select()
@@ -73,11 +119,15 @@ export default function CheckoutPage() {
             // 3. Keep local bridging active to seamlessly power /order-confirmation UI without heavy fetches
             const localReceiptCopy = {
                 items: cart,
-                total: cartTotal,
+                total: finalTotal,
+                subtotal: cartTotal,
                 customer: formData,
-                orderId: orderData.id, // mapped from real DB UUID
+                orderId: orderData.id,
                 date: orderData.created_at,
                 status: 'Pending',
+                discountCode: isPromoApplied ? appliedCode : null,
+                discountAmount: discountAmount,
+                discountPercent: discountPercent
             };
             
             localStorage.setItem('htan_last_order', JSON.stringify(localReceiptCopy));
@@ -134,9 +184,64 @@ export default function CheckoutPage() {
                                 </div>
                             ))}
                         </div>
-                        <div className="border-t border-white/10 pt-4 flex justify-between items-center">
-                            <span className="text-lg font-bold text-white">Total</span>
-                            <span className="text-2xl font-bold text-blue-400">Rp {cartTotal.toLocaleString('id-ID')}</span>
+                        {/* Promo Code Input */}
+                        <div className="border-t border-white/10 pt-6 mt-6">
+                            <label htmlFor="promoCodeInput" className="block text-sm font-medium text-gray-300 mb-2">Kode Diskon / Promo</label>
+                            <div className="flex gap-2">
+                                <input
+                                    id="promoCodeInput"
+                                    type="text"
+                                    value={promoCode}
+                                    onChange={(e) => setPromoCode(e.target.value)}
+                                    placeholder="Masukkan kode promo (misal: HTAN10)"
+                                    className="flex-grow px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 text-sm transition-colors"
+                                    disabled={isSubmitting || isPromoApplied}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleApplyPromo}
+                                    disabled={isSubmitting || !promoCode.trim() || isPromoApplied}
+                                    className={`px-5 py-2.5 font-bold rounded-xl text-sm transition-all active:scale-95 ${
+                                        isPromoApplied
+                                            ? 'bg-green-600 text-white cursor-default'
+                                            : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none'
+                                    }`}
+                                >
+                                    {isPromoApplied ? 'Applied' : 'Apply'}
+                                </button>
+                            </div>
+                            {promoError && <p className="text-red-400 text-xs mt-1.5">{promoError}</p>}
+                            {isPromoApplied && (
+                                <div className="flex justify-between items-center mt-3 text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-2 rounded-xl">
+                                    <span>Promo "{appliedCode}" berhasil dipasang!</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleRemovePromo}
+                                        className="text-red-400 hover:text-red-300 font-bold underline"
+                                    >
+                                        Hapus
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="border-t border-white/10 pt-4 mt-6 flex flex-col gap-2">
+                            {isPromoApplied && (
+                                <>
+                                    <div className="flex justify-between items-center text-sm text-gray-400">
+                                        <span>Subtotal</span>
+                                        <span>Rp {cartTotal.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm text-green-400">
+                                        <span>Potongan {discountPercent > 0 ? `(${discountPercent}%)` : ''}</span>
+                                        <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
+                                    </div>
+                                </>
+                            )}
+                            <div className="flex justify-between items-center pt-2">
+                                <span className="text-lg font-bold text-white">Total</span>
+                                <span className="text-2xl font-bold text-blue-400">Rp {finalTotal.toLocaleString('id-ID')}</span>
+                            </div>
                         </div>
                     </div>
 
