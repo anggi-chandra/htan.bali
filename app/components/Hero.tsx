@@ -83,7 +83,7 @@ export default function Hero() {
                         Lihat Katalog
                     </Link>
                     <a
-                        href="https://wa.me/6281234567890" // Replace with actual number
+                        href="https://wa.me/6282145580460" // Replace with actual number
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-8 py-4 bg-transparent border border-white/30 text-white font-bold rounded-full hover:bg-white/10 transition-all"

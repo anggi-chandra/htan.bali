@@ -73,7 +73,14 @@ export default function AdminSidebar() {
                 })}
             </nav>
 
-            <div className="w-full px-4 mt-auto">
+            <div className="w-full px-4 mt-auto space-y-2">
+                <Link 
+                    href="/"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white rounded-xl transition-colors font-medium border border-white/10"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Halaman Utama
+                </Link>
                 <button 
                     onClick={handleLogout}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl transition-colors font-medium"

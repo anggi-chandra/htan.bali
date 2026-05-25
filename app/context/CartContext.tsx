@@ -45,13 +45,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setCart((prevCart) => {
             const existingItem = prevCart.find((item) => item.id === product.id);
             if (existingItem) {
+                const newQty = Math.min(product.stock, existingItem.quantity + quantity);
                 return prevCart.map((item) =>
                     item.id === product.id
-                        ? { ...item, quantity: item.quantity + quantity }
+                        ? { ...item, quantity: newQty }
                         : item
                 );
             }
-            return [...prevCart, { ...product, quantity }];
+            return [...prevCart, { ...product, quantity: Math.min(product.stock, quantity) }];
         });
         setIsCartOpen(true); // Open drawer when adding item
     };
@@ -67,7 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
         setCart((prevCart) =>
             prevCart.map((item) =>
-                item.id === productId ? { ...item, quantity } : item
+                item.id === productId ? { ...item, quantity: Math.min(item.stock, quantity) } : item
             )
         );
     };

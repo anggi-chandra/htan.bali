@@ -268,7 +268,7 @@ export default function AdminOrders() {
                                     <div>
                                         <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">HTan Bali</h1>
                                         <p className="text-gray-500 mt-2">Rental Alat Komunikasi & Event Setup</p>
-                                        <p className="text-sm text-gray-500 mt-1">Denpasar, Bali - +62 812-3456-7890</p>
+                                        <p className="text-sm text-gray-500 mt-1">Denpasar, Bali - +62 821-4558-0460</p>
                                     </div>
                                     <div className="text-right">
                                         <h2 className="text-2xl font-bold text-blue-600 mb-1">INVOICE</h2>

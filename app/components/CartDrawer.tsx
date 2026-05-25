@@ -82,7 +82,11 @@ export default function CartDrawer() {
                                             <span className="px-2 text-white text-sm">{item.quantity}</span>
                                             <button
                                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                className="px-2 py-1 text-gray-400 hover:text-white"
+                                                disabled={item.quantity >= item.stock}
+                                                className={`px-2 py-1 transition-colors ${
+                                                    item.quantity >= item.stock ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white'
+                                                }`}
+                                                title={item.quantity >= item.stock ? 'Mencapai batas stok' : 'Tambah jumlah'}
                                             >
                                                 +
                                             </button>

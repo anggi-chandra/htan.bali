@@ -192,7 +192,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                         {/* Footer */}
                         <div className="border-t border-gray-100 pt-8 text-center sm:text-left text-gray-400 text-sm">
                             <p className="mb-1 htan-print-footer-text">Thank you for choosing HTan Bali. We appreciate your business.</p>
-                            <p>For support, please contact via WhatsApp at +62 878-6063-7476.</p>
+                            <p>For support, please contact via WhatsApp at +62 821-4558-0460.</p>
                         </div>
                     </div>
                 </div>

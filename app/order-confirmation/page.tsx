@@ -43,7 +43,7 @@ export default function OrderConfirmationPage() {
 
         const message = `*New Rental Order*\nOrder ID: ${order.orderId}\n\n*Customer Details:*\nName: ${order.customer.name}\nWhatsApp: ${order.customer.whatsapp}\nDates: ${order.customer.startDate} to ${order.customer.endDate}\nAddress: ${order.customer.address}\n\n*Items:*\n${itemsList}\n\n*Total Estimate: Rp ${order.total.toLocaleString('id-ID')}*\n\nPlease confirm availability.`;
 
-        const whatsappUrl = `https://wa.me/6287860637476?text=${encodeURIComponent(message)}`;
+        const whatsappUrl = `https://wa.me/6282145580460?text=${encodeURIComponent(message)}`;
 
         // Clear cart after confirming
         clearCart();

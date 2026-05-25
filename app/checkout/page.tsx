@@ -32,9 +32,11 @@ export default function CheckoutPage() {
         
         try {
             // 1. Insert Order
+            const orderId = `ORD-${Date.now()}`;
             const { data: orderData, error: orderError } = await supabase
                 .from('orders')
                 .insert([{
+                     id: orderId,
                      customer_name: formData.name,
                      customer_whatsapp: formData.whatsapp,
                      customer_address: formData.address,
