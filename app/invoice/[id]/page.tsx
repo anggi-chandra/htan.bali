@@ -137,7 +137,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                                     <div className="flex justify-between items-center pt-2">
                                         <span className="text-gray-500">Duration</span>
                                         <span className="font-bold text-blue-600">
-                                            {Math.max(1, Math.ceil((new Date(order.customer.endDate).getTime() - new Date(order.customer.startDate).getTime()) / (1000 * 60 * 60 * 24)))} Days
+                                            {Math.round((new Date(order.customer.endDate).getTime() - new Date(order.customer.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} Days
                                         </span>
                                     </div>
                                 </div>

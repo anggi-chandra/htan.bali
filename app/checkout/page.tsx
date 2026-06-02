@@ -19,34 +19,80 @@ export default function CheckoutPage() {
         address: '',
     });
 
+    // Helper to get local date string for HTML date input min attribute
+    const getLocalDateString = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const todayStr = getLocalDateString();
+
+    // Calculate rental duration in days (inclusive of end date)
+    const getRentalDays = () => {
+        if (!formData.startDate) return 0;
+        if (!formData.endDate) return 1;
+        
+        const start = new Date(formData.startDate);
+        const end = new Date(formData.endDate);
+        if (end < start) return 1;
+        
+        const diffTime = end.getTime() - start.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays + 1;
+    };
+
+    const rentalDays = getRentalDays();
+
+    const subtotal = cartTotal * rentalDays;
+
     // Promo code state
     const [promoCode, setPromoCode] = useState('');
     const [appliedCode, setAppliedCode] = useState('');
     const [discountPercent, setDiscountPercent] = useState(0);
-    const [discountAmount, setDiscountAmount] = useState(0);
     const [promoError, setPromoError] = useState('');
     const [isPromoApplied, setIsPromoApplied] = useState(false);
 
+    // Dynamic discount calculation
+    let discountAmount = 0;
+    if (isPromoApplied) {
+        if (appliedCode === 'HTAN10') {
+            discountAmount = Math.round(subtotal * 0.1);
+        } else if (appliedCode === 'DISKON20') {
+            discountAmount = Math.round(subtotal * 0.2);
+        } else if (appliedCode === 'EVENTSERU') {
+            discountAmount = Math.min(subtotal, 50000);
+        } else if (appliedCode === 'SITEFEST') {
+            discountAmount = Math.round(subtotal * 0.7);
+        }
+    }
+
+    const finalTotal = subtotal - discountAmount;
+
     const handleApplyPromo = () => {
+        if (!formData.startDate) {
+            setPromoError('Silakan pilih tanggal mulai sewa terlebih dahulu.');
+            return;
+        }
         setPromoError('');
         const code = promoCode.trim().toUpperCase();
 
         if (code === 'HTAN10') {
-            const amount = Math.round(cartTotal * 0.1);
             setDiscountPercent(10);
-            setDiscountAmount(amount);
             setAppliedCode(code);
             setIsPromoApplied(true);
         } else if (code === 'DISKON20') {
-            const amount = Math.round(cartTotal * 0.2);
             setDiscountPercent(20);
-            setDiscountAmount(amount);
             setAppliedCode(code);
             setIsPromoApplied(true);
         } else if (code === 'EVENTSERU') {
-            const amount = Math.min(cartTotal, 50000);
             setDiscountPercent(0);
-            setDiscountAmount(amount);
+            setAppliedCode(code);
+            setIsPromoApplied(true);
+        } else if (code === 'SITEFEST') {
+            setDiscountPercent(70);
             setAppliedCode(code);
             setIsPromoApplied(true);
         } else {
@@ -58,38 +104,46 @@ export default function CheckoutPage() {
         setPromoCode('');
         setAppliedCode('');
         setDiscountPercent(0);
-        setDiscountAmount(0);
         setIsPromoApplied(false);
         setPromoError('');
     };
 
-    const finalTotal = cartTotal - discountAmount;
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => {
+            const nextData = { ...prev, [name]: value };
+            // If start date is selected and end date is empty, default end date to start date
+            if (name === 'startDate' && !nextData.endDate) {
+                nextData.endDate = nextData.startDate;
+            }
+            // Automatically adjust end date if it is before start date
+            if (name === 'startDate' && nextData.endDate && nextData.startDate > nextData.endDate) {
+                nextData.endDate = nextData.startDate;
+            }
+            return nextData;
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (cart.length === 0) return;
         setIsSubmitting(true);
-        
+
         try {
             // 1. Insert Order
             const orderId = `ORD-${Date.now()}`;
             const { data: orderData, error: orderError } = await supabase
                 .from('orders')
                 .insert([{
-                     id: orderId,
-                     customer_name: formData.name,
-                     customer_whatsapp: formData.whatsapp,
-                     customer_address: formData.address,
-                     start_date: formData.startDate,
-                     end_date: formData.endDate,
-                     total_price: finalTotal,
-                     status: 'Pending'
+                    id: orderId,
+                    customer_name: formData.name,
+                    customer_whatsapp: formData.whatsapp,
+                    customer_address: formData.address,
+                    start_date: formData.startDate,
+                    end_date: formData.endDate,
+                    total_price: finalTotal,
+                    status: 'Pending'
                 }])
                 .select()
                 .single();
@@ -120,7 +174,7 @@ export default function CheckoutPage() {
             const localReceiptCopy = {
                 items: cart,
                 total: finalTotal,
-                subtotal: cartTotal,
+                subtotal: subtotal,
                 customer: formData,
                 orderId: orderData.id,
                 date: orderData.created_at,
@@ -129,7 +183,7 @@ export default function CheckoutPage() {
                 discountAmount: discountAmount,
                 discountPercent: discountPercent
             };
-            
+
             localStorage.setItem('htan_last_order', JSON.stringify(localReceiptCopy));
             router.push('/order-confirmation');
 
@@ -193,7 +247,7 @@ export default function CheckoutPage() {
                                     type="text"
                                     value={promoCode}
                                     onChange={(e) => setPromoCode(e.target.value)}
-                                    placeholder="Masukkan kode promo (misal: HTAN10)"
+                                    placeholder="Masukkan kode promo"
                                     className="flex-grow px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 text-sm transition-colors"
                                     disabled={isSubmitting || isPromoApplied}
                                 />
@@ -201,11 +255,10 @@ export default function CheckoutPage() {
                                     type="button"
                                     onClick={handleApplyPromo}
                                     disabled={isSubmitting || !promoCode.trim() || isPromoApplied}
-                                    className={`px-5 py-2.5 font-bold rounded-xl text-sm transition-all active:scale-95 ${
-                                        isPromoApplied
-                                            ? 'bg-green-600 text-white cursor-default'
-                                            : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none'
-                                    }`}
+                                    className={`px-5 py-2.5 font-bold rounded-xl text-sm transition-all active:scale-95 ${isPromoApplied
+                                        ? 'bg-green-600 text-white cursor-default'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none'
+                                        }`}
                                 >
                                     {isPromoApplied ? 'Applied' : 'Apply'}
                                 </button>
@@ -225,22 +278,34 @@ export default function CheckoutPage() {
                             )}
                         </div>
 
-                        <div className="border-t border-white/10 pt-4 mt-6 flex flex-col gap-2">
-                            {isPromoApplied && (
-                                <>
-                                    <div className="flex justify-between items-center text-sm text-gray-400">
-                                        <span>Subtotal</span>
-                                        <span>Rp {cartTotal.toLocaleString('id-ID')}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm text-green-400">
-                                        <span>Potongan {discountPercent > 0 ? `(${discountPercent}%)` : ''}</span>
-                                        <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
-                                    </div>
-                                </>
+                        <div className="border-t border-white/10 pt-4 mt-6 flex flex-col gap-2.5">
+                            <div className="flex justify-between items-center text-sm text-gray-400">
+                                <span>Biaya Sewa / Hari</span>
+                                <span>Rp {cartTotal.toLocaleString('id-ID')}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm text-gray-400">
+                                <span>Durasi Sewa</span>
+                                <span className="font-semibold text-white">
+                                    {rentalDays > 0 ? `${rentalDays} Hari` : 'Pilih tanggal mulai'}
+                                </span>
+                            </div>
+                            {rentalDays > 1 && (
+                                <div className="flex justify-between items-center text-sm text-gray-400">
+                                    <span>Subtotal ({rentalDays} hari)</span>
+                                    <span>Rp {subtotal.toLocaleString('id-ID')}</span>
+                                </div>
                             )}
-                            <div className="flex justify-between items-center pt-2">
+                            {isPromoApplied && rentalDays > 0 && (
+                                <div className="flex justify-between items-center text-sm text-green-400">
+                                    <span>Potongan Promo {discountPercent > 0 ? `(${discountPercent}%)` : ''}</span>
+                                    <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center pt-3 border-t border-white/5">
                                 <span className="text-lg font-bold text-white">Total</span>
-                                <span className="text-2xl font-bold text-blue-400">Rp {finalTotal.toLocaleString('id-ID')}</span>
+                                <span className="text-2xl font-bold text-blue-400">
+                                    {rentalDays > 0 ? `Rp ${finalTotal.toLocaleString('id-ID')}` : '-'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -286,6 +351,7 @@ export default function CheckoutPage() {
                                         id="startDate"
                                         name="startDate"
                                         required
+                                        min={todayStr}
                                         value={formData.startDate}
                                         onChange={handleChange}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-colors"
@@ -299,6 +365,7 @@ export default function CheckoutPage() {
                                         id="endDate"
                                         name="endDate"
                                         required
+                                        min={formData.startDate || todayStr}
                                         value={formData.endDate}
                                         onChange={handleChange}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-colors"
@@ -325,9 +392,8 @@ export default function CheckoutPage() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className={`w-full text-white font-bold py-4 rounded-xl transition-colors shadow-lg mt-4 flex justify-center items-center gap-2 ${
-                                    isSubmitting ? 'bg-blue-800 opacity-70 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
-                                }`}
+                                className={`w-full text-white font-bold py-4 rounded-xl transition-colors shadow-lg mt-4 flex justify-center items-center gap-2 ${isSubmitting ? 'bg-blue-800 opacity-70 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                                    }`}
                             >
                                 {isSubmitting ? (
                                     <>
