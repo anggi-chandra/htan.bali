@@ -34,11 +34,11 @@ export default function CheckoutPage() {
     const getRentalDays = () => {
         if (!formData.startDate) return 0;
         if (!formData.endDate) return 1;
-        
+
         const start = new Date(formData.startDate);
         const end = new Date(formData.endDate);
         if (end < start) return 1;
-        
+
         const diffTime = end.getTime() - start.getTime();
         const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
         return diffDays + 1;
@@ -65,7 +65,7 @@ export default function CheckoutPage() {
         } else if (appliedCode === 'EVENTSERU') {
             discountAmount = Math.min(subtotal, 50000);
         } else if (appliedCode === 'SITEFEST') {
-            discountAmount = Math.round(subtotal * 0.7);
+            discountAmount = Math.round(subtotal * 0.75);
         }
     }
 
@@ -92,7 +92,7 @@ export default function CheckoutPage() {
             setAppliedCode(code);
             setIsPromoApplied(true);
         } else if (code === 'SITEFEST') {
-            setDiscountPercent(70);
+            setDiscountPercent(75);
             setAppliedCode(code);
             setIsPromoApplied(true);
         } else {
