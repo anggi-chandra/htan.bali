@@ -43,12 +43,22 @@ export default function AdminCustomers() {
             data.forEach((order) => {
                 const phone = order.customer_whatsapp;
                 
+                let displayAddress = order.customer_address;
+                if (order.customer_address && order.customer_address.startsWith('{')) {
+                    try {
+                        const parsedAddress = JSON.parse(order.customer_address);
+                        displayAddress = parsedAddress.address;
+                    } catch (e) {
+                        console.error('Error parsing address JSON:', e);
+                    }
+                }
+
                 if (!customerMap.has(phone)) {
                     customerMap.set(phone, {
                         id: `CUST-${phone.slice(-4)}`, // Fallback generation ID
                         name: order.customer_name,
                         whatsapp: phone,
-                        address: order.customer_address,
+                        address: displayAddress,
                         totalOrders: 1,
                         totalSpent: Number(order.total_price),
                         joinDate: new Date(order.created_at).toLocaleDateString('id-ID')

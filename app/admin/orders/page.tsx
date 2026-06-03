@@ -23,6 +23,10 @@ export interface OrderDetail {
         quantity: number;
     }>;
     status: 'Pending' | 'Active' | 'Completed';
+    subtotal?: number;
+    discountCode?: string | null;
+    discountAmount?: number;
+    discountPercent?: number;
 }
 
 export default function AdminOrders() {
@@ -58,25 +62,58 @@ export default function AdminOrders() {
             .order('created_at', { ascending: false });
 
         if (!error && data) {
-            const mappedOrders: OrderDetail[] = data.map(o => ({
-                orderId: o.id,
-                total: Number(o.total_price),
-                date: o.created_at,
-                customer: {
-                    name: o.customer_name,
-                    whatsapp: o.customer_whatsapp,
-                    address: o.customer_address,
-                    startDate: o.start_date,
-                    endDate: o.end_date
-                },
-                items: (o.items as any[]).map((item) => ({
+            const mappedOrders: OrderDetail[] = data.map(o => {
+                let displayAddress = o.customer_address;
+                let discountCode = null;
+                let discountAmount = 0;
+                let discountPercent = 0;
+
+                if (o.customer_address && o.customer_address.startsWith('{')) {
+                    try {
+                        const parsedAddress = JSON.parse(o.customer_address);
+                        displayAddress = parsedAddress.address;
+                        discountCode = parsedAddress.discountCode || null;
+                        discountAmount = parsedAddress.discountAmount || 0;
+                        discountPercent = parsedAddress.discountPercent || 0;
+                    } catch (e) {
+                        console.error('Error parsing address JSON:', e);
+                    }
+                }
+
+                // Calculate subtotal
+                const start = new Date(o.start_date);
+                const end = new Date(o.end_date);
+                const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                
+                const mappedItems = (o.items as any[]).map((item) => ({
                     id: item.id,
                     name: item.products?.name || 'Unknown Product',
                     price: Number(item.price),
                     quantity: Number(item.quantity)
-                })),
-                status: o.status as 'Pending' | 'Active' | 'Completed'
-            }));
+                }));
+
+                const cartTotal = mappedItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                const calculatedSubtotal = cartTotal * diffDays;
+
+                return {
+                    orderId: o.id,
+                    total: Number(o.total_price),
+                    date: o.created_at,
+                    customer: {
+                        name: o.customer_name,
+                        whatsapp: o.customer_whatsapp,
+                        address: displayAddress,
+                        startDate: o.start_date,
+                        endDate: o.end_date
+                    },
+                    items: mappedItems,
+                    status: o.status as 'Pending' | 'Active' | 'Completed',
+                    subtotal: calculatedSubtotal,
+                    discountCode: discountCode,
+                    discountAmount: discountAmount,
+                    discountPercent: discountPercent
+                };
+            });
             setOrders(mappedOrders);
         }
         setIsLoading(false);
@@ -117,6 +154,37 @@ export default function AdminOrders() {
             await supabase.from('orders').update({ status: 'Completed' }).eq('id', orderId);
             await loadOrders();
         }
+    };
+
+    const handleDeleteOrder = async (orderId: string) => {
+        if (!confirm('Apakah Anda yakin ingin menghapus pesanan ini dari database secara permanen?')) return;
+        
+        const order = orders.find(o => o.orderId === orderId);
+        if (!order) return;
+
+        setIsLoading(true);
+        try {
+            // Restore inventory stock if deleting an active rental order
+            if (order.status === 'Active') {
+                await updateProductsStock(order.items, 'restore');
+            }
+            
+            const { error } = await supabase
+                .from('orders')
+                .delete()
+                .eq('id', orderId);
+
+            if (error) {
+                console.error('Delete Order Error:', error);
+                alert('Gagal menghapus pesanan dari database.');
+            } else {
+                await loadOrders();
+            }
+        } catch (e) {
+            console.error('Error during deletion:', e);
+            alert('Terjadi kesalahan saat menghapus pesanan.');
+        }
+        setIsLoading(false);
     };
 
     const printInvoice = () => {
@@ -235,6 +303,12 @@ export default function AdminOrders() {
                                                        View Invoice
                                                    </button>
                                                 )}
+                                                <button 
+                                                    onClick={() => handleDeleteOrder(order.orderId)}
+                                                    className="text-red-400 hover:text-red-300 text-xs font-semibold px-4 py-1.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-colors border border-red-500/20 w-full"
+                                                >
+                                                    Hapus Pesanan
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -330,8 +404,16 @@ export default function AdminOrders() {
                                     <div className="w-1/2">
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-gray-600">Subtotal</span>
-                                            <span className="font-medium text-gray-900">Rp {invoiceOrder.total.toLocaleString('id-ID')}</span>
+                                            <span className="font-medium text-gray-900">
+                                                Rp {(invoiceOrder.subtotal || invoiceOrder.total).toLocaleString('id-ID')}
+                                            </span>
                                         </div>
+                                        {invoiceOrder.discountCode && (
+                                            <div className="flex justify-between items-center mb-2 text-green-600 font-medium">
+                                                <span>Promo ({invoiceOrder.discountCode}){invoiceOrder.discountPercent && invoiceOrder.discountPercent > 0 ? ` (${invoiceOrder.discountPercent}%)` : ''}</span>
+                                                <span>- Rp {invoiceOrder.discountAmount?.toLocaleString('id-ID')}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="text-gray-600">Tax/Fees</span>
                                             <span className="font-medium text-gray-900">-</span>

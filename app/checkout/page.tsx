@@ -131,6 +131,13 @@ export default function CheckoutPage() {
         setIsSubmitting(true);
 
         try {
+            const addressPayload = JSON.stringify({
+                address: formData.address,
+                discountCode: isPromoApplied ? appliedCode : null,
+                discountAmount: discountAmount,
+                discountPercent: discountPercent
+            });
+
             // 1. Insert Order
             const orderId = `ORD-${Date.now()}`;
             const { data: orderData, error: orderError } = await supabase
@@ -139,7 +146,7 @@ export default function CheckoutPage() {
                     id: orderId,
                     customer_name: formData.name,
                     customer_whatsapp: formData.whatsapp,
-                    customer_address: formData.address,
+                    customer_address: addressPayload,
                     start_date: formData.startDate,
                     end_date: formData.endDate,
                     total_price: finalTotal,

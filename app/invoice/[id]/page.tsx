@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
+import { supabase } from '../../../utils/supabase';
 
 export default function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
@@ -11,13 +12,88 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchOrder = () => {
+        const fetchOrder = async () => {
+            // 1. Try local storage first
             const stored = localStorage.getItem('htan_last_order');
             if (stored) {
                 const parsed = JSON.parse(stored);
-                if (parsed.orderId === resolvedParams.id && parsed.status === 'validated') {
+                if (parsed.orderId === resolvedParams.id) {
                     setOrder(parsed);
+                    setIsLoading(false);
+                    return;
                 }
+            }
+            
+            // 2. Fetch from Supabase
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        items:order_items (
+                            id:product_id,
+                            quantity,
+                            price:price_at_booking,
+                            products ( name )
+                        )
+                    `)
+                    .eq('id', resolvedParams.id)
+                    .single();
+
+                if (!error && data) {
+                    let displayAddress = data.customer_address;
+                    let discountCode = null;
+                    let discountAmount = 0;
+                    let discountPercent = 0;
+
+                    if (data.customer_address && data.customer_address.startsWith('{')) {
+                        try {
+                            const parsedAddress = JSON.parse(data.customer_address);
+                            displayAddress = parsedAddress.address;
+                            discountCode = parsedAddress.discountCode || null;
+                            discountAmount = parsedAddress.discountAmount || 0;
+                            discountPercent = parsedAddress.discountPercent || 0;
+                        } catch (e) {
+                            console.error('Error parsing address JSON:', e);
+                        }
+                    }
+
+                    // Calculate subtotal
+                    const start = new Date(data.start_date);
+                    const end = new Date(data.end_date);
+                    const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    const mappedItems = (data.items as any[]).map((item) => ({
+                        id: item.id,
+                        name: item.products?.name || 'Unknown Product',
+                        price: Number(item.price),
+                        quantity: Number(item.quantity)
+                    }));
+
+                    const cartTotal = mappedItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                    const calculatedSubtotal = cartTotal * diffDays;
+
+                    setOrder({
+                        items: mappedItems,
+                        total: Number(data.total_price),
+                        subtotal: calculatedSubtotal,
+                        customer: {
+                            name: data.customer_name,
+                            whatsapp: data.customer_whatsapp,
+                            startDate: data.start_date,
+                            endDate: data.end_date,
+                            address: displayAddress
+                        },
+                        orderId: data.id,
+                        date: data.created_at,
+                        status: 'validated', // map to validated to allow view
+                        discountCode: discountCode,
+                        discountAmount: discountAmount,
+                        discountPercent: discountPercent
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching order from database:', err);
             }
             setIsLoading(false);
         };
@@ -177,11 +253,19 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                         <div className="flex justify-end mb-16">
                             <div className="w-full sm:w-1/2 bg-gray-50 rounded-3xl p-6 sm:p-8 border border-gray-100">
                                 <div className="space-y-4">
-                                    <div className="flex justify-between items-center text-gray-600 mb-4 pb-4 border-b border-gray-200">
+                                    <div className="flex justify-between items-center text-gray-600 pb-2 border-b border-gray-100">
                                         <span>Subtotal</span>
-                                        <span className="font-medium">Rp {order.total.toLocaleString('id-ID')}</span>
+                                        <span className="font-medium">
+                                            Rp {(order.subtotal || (order.total + (order.discountAmount || 0))).toLocaleString('id-ID')}
+                                        </span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xl sm:text-2xl">
+                                    {order.discountCode && (
+                                        <div className="flex justify-between items-center text-green-600 pb-2 border-b border-gray-100">
+                                            <span className="font-medium">Promo ({order.discountCode}){order.discountPercent > 0 ? ` (${order.discountPercent}%)` : ''}</span>
+                                            <span className="font-bold">- Rp {order.discountAmount.toLocaleString('id-ID')}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center text-xl sm:text-2xl pt-2">
                                         <span className="font-bold text-gray-800">Total</span>
                                         <span className="font-extrabold text-blue-600">Rp {order.total.toLocaleString('id-ID')}</span>
                                     </div>
