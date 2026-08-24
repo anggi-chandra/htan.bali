@@ -62,8 +62,8 @@ export default function CheckoutPage() {
             discountAmount = Math.round(subtotal * 0.1);
         } else if (appliedCode === 'DISKON20') {
             discountAmount = Math.round(subtotal * 0.2);
-        } else if (appliedCode === 'EVENTSERU') {
-            discountAmount = Math.min(subtotal, 50000);
+        } else if (appliedCode === 'PMB') {
+            discountAmount = Math.round(subtotal * 0.285714);
         } else if (appliedCode === 'SITEFEST') {
             discountAmount = Math.round(subtotal * 0.75);
         }
@@ -87,8 +87,8 @@ export default function CheckoutPage() {
             setDiscountPercent(20);
             setAppliedCode(code);
             setIsPromoApplied(true);
-        } else if (code === 'EVENTSERU') {
-            setDiscountPercent(0);
+        } else if (code === 'PMB') {
+            setDiscountPercent(28);
             setAppliedCode(code);
             setIsPromoApplied(true);
         } else if (code === 'SITEFEST') {
